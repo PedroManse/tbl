@@ -1,0 +1,21 @@
+User [
+	0 {}
+	1 {}
+	2 {}
+]
+
+Perfil de acesso [
+	0 {*User: 0, *Acesso de app: 0}
+	1 {*User: 1, *Acesso de app: 0}
+	2 {*User: 2, *Acesso de app: 1}
+]
+
+Acesso de app [
+	0 {*App: 0, Perm: "R-", Desc: "Pesoa"}
+	1 {*App: 0, Perm: "RW", Desc: "Adm"}
+]
+
+App [
+	0 {Name: "ABC"}
+	1 {Name: "DEF"}
+]
