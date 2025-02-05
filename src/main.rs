@@ -16,8 +16,9 @@ fn main() {
     //    ])
     //]);
     //println!("{user_table:?}");
-    let c = std::fs::read_to_string("acc.tbl").unwrap();
-    let x = parse::x(&c);
-    //println!("{:?}");
+    let content = std::fs::read_to_string("acc.tbl").unwrap();
+    let tokens = token::tokenize(&content);
+    let tables = parse::parse(tokens);
+    let tables = prepare::prepare(tables);
 }
 

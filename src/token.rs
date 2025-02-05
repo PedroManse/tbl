@@ -73,12 +73,6 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
             )|*
         };
     }
-    macro_rules! whitespace {
-        ($s:pat) => {
-            ($s, catch!(space))
-        };
-    }
-    //*TODO ignore space
     for c in cont.chars() {
         state = match (state, c) {
             (Nothing, ch @ (catch!(alpha, space) | '_')) => MakingTableName {
@@ -97,9 +91,9 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
                 tokens.push(Token::CloseSquare);
                 Nothing
             }
-            (InsideTable, ch @ catch!(num)) => {
-                MakingRowId { buf: ch.to_string() }
-            }
+            (InsideTable, ch @ catch!(num)) => MakingRowId {
+                buf: ch.to_string(),
+            },
             (MakingRowId { mut buf }, ch @ catch!(num)) => {
                 buf.push(ch);
                 MakingRowId { buf }
@@ -110,9 +104,9 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
                 tokens.push(Token::OpenCurly);
                 InsideRow
             }
-            (InsideRow, ch @ (catch!(alpha) | '*' | '_')) => {
-                RowItemName { buf: ch.to_string() }
-            }
+            (InsideRow, ch @ (catch!(alpha) | '*' | '_')) => RowItemName {
+                buf: ch.to_string(),
+            },
             (InsideRow, '}') => {
                 tokens.push(Token::CloseCurly);
                 InsideTable
@@ -126,14 +120,12 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
                 tokens.push(Token::Colen);
                 WaitingRowItemValue
             }
-            (WaitingRowItemValue, '"') =>{
-                RowItemValueStr { buf: String::new() }
-            }
-            (RowItemValueStr { buf }, '"' ) => {
+            (WaitingRowItemValue, '"') => RowItemValueStr { buf: String::new() },
+            (RowItemValueStr { buf }, '"') => {
                 tokens.push(Token::ValStr(buf));
                 RowItemValueStrDone
             }
-            (RowItemValueStr { mut buf }, ch ) => {
+            (RowItemValueStr { mut buf }, ch) => {
                 buf.push(ch);
                 RowItemValueStr { buf }
             }
@@ -145,12 +137,14 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
                 tokens.push(Token::CloseCurly);
                 InsideTable
             }
-            (WaitingRowItemValue, ch @ catch!(num)) => {
-                RowItemValueNum { buf: ch.to_string() }
-            }
+            (WaitingRowItemValue, ch @ catch!(num)) => RowItemValueNum {
+                buf: ch.to_string(),
+            },
             (RowItemValueNum { mut buf }, ch @ catch!(num)) => {
                 buf.push(ch);
-                RowItemValueNum { buf: ch.to_string() }
+                RowItemValueNum {
+                    buf: ch.to_string(),
+                }
             }
             (RowItemValueNum { buf }, ',') => {
                 let num = buf.parse().unwrap();
@@ -165,14 +159,13 @@ pub fn tokenize(cont: &str) -> Vec<Token> {
                 InsideTable
             }
 
-            (s, catch!(space)) => {s}
-            (s, c)=>{
+            (s, catch!(space)) => s,
+            (s, c) => {
                 eprintln!("state: {s:?}");
                 eprintln!("char: {c:?}");
                 panic!()
-            },
+            }
         }
     }
-    println!("{tokens:?}");
     tokens
 }

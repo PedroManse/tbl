@@ -1,12 +1,6 @@
 use super::token::Token;
 
 #[derive(Debug)]
-pub enum Value {
-    Str(String),
-    Num(f64),
-}
-
-#[derive(Debug)]
 struct PartialRow {
     id: i64,
     items: Vec<RowItem>,
@@ -15,6 +9,18 @@ struct PartialRow {
 #[derive(Debug)]
 struct PartialRowItem {
     name: String,
+}
+
+#[derive(Debug)]
+struct PartialTable {
+    name: String,
+    rows: Vec<Row>,
+}
+
+#[derive(Debug)]
+pub enum Value {
+    Str(String),
+    Num(f64),
 }
 
 #[derive(Debug)]
@@ -33,12 +39,6 @@ pub struct Row {
 pub struct Table {
     pub name: String,
     pub rows: Vec<Row>,
-}
-
-#[derive(Debug)]
-struct PartialTable {
-    name: String,
-    rows: Vec<Row>,
 }
 
 #[derive(Debug)]
@@ -93,10 +93,9 @@ enum State {
     },
 }
 
-pub fn x(cont: &str) -> Vec<Table> {
+pub fn parse(tokens: Vec<Token>) -> Vec<Table> {
     use State::*;
     use Token::*;
-    let tokens = super::token::tokenize(cont);
 
     let mut tables: Vec<Table> = vec![];
     let mut state = State::Nothing;
