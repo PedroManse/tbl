@@ -1,7 +1,7 @@
 User [
-	0 {}
-	1 {}
-	2 {}
+	0 {CPF: 0}
+	1 {CPF: 1}
+	2 {CPF: 2}
 ]
 
 Perfil de acesso [
