@@ -3,19 +3,32 @@ use std::collections::HashSet;
 pub mod parse;
 pub mod token;
 pub mod prepare;
-use self::parse::{Value, RowItem};
+use self::parse::{Row, RowItem, Value};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum TypeDef {
     Num,
     Str,
     Id,
+    Undef,
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
-pub struct ColumnDef {
+#[derive(Debug, Eq)]
+pub struct ColumnDef { // == and hash ignore typedef
     pub name: String,
     pub typedef: TypeDef,
+}
+
+impl std::hash::Hash for ColumnDef {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
+
+impl PartialEq for ColumnDef {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
 }
 
 #[derive(Debug)]
@@ -27,7 +40,7 @@ pub struct TableDef {
 #[derive(Debug)]
 pub struct TableVal<'a> {
     pub def: &'a TableDef,
-    pub rows: Vec<HashMap<String, Value>>,
+    pub rows: Row,
 }
 
 impl From<&Value> for TypeDef {
@@ -50,7 +63,7 @@ impl TableDef {
     pub fn new(name: String) -> Self {
         TableDef{name, columns: HashSet::new()}
     }
-    pub fn merge_row(&mut self, rows: Vec<RowItem>) {
+    pub fn merge_row(&mut self, rows: &[RowItem]) {
         for item in rows {
             let c = ColumnDef{
                 typedef: match item.value {
@@ -58,7 +71,7 @@ impl TableDef {
                     Value::Num(_) if item.name.starts_with('*')=>TypeDef::Id,
                     Value::Num(_)=>TypeDef::Num,
                 },
-                name: item.name,
+                name: item.name.clone(),
             };
             self.columns.insert(c);
         }
@@ -66,24 +79,28 @@ impl TableDef {
 }
 
 impl<'a> TableVal<'a> {
-    pub fn new(def: &'a TableDef, rows: Vec<HashMap<String, Value>>) -> TableVal<'a> {
-        let ok = rows
-            .first()
-            .map(|row| {
-                for col in &def.columns {
-                    let Some(colv) = row.get(&col.name) else {
-                        return false;
-                    };
-                    if col.typedef != colv.into() {
-                        return false;
-                    }
-                }
-                true
-            })
-            .unwrap_or(true);
-        if !ok {
-            panic!("Mistaken types\ndef: {def:?}\nrows: {rows:?}")
+    pub fn new(def: &'a TableDef, row: Row) -> TableVal<'a> {
+        for item in &row.items {
+            let ColumnDef{typedef, ..} = def.columns.get(&ColumnDef{name: item.name.clone(), typedef: TypeDef::Undef}).unwrap();
         }
-        TableVal { def, rows }
+        //let ok = rows
+        //    .first()
+        //    .map(|row| {
+        //        for col in &def.columns {
+        //            let Some(colv) = row.get(&col.name) else {
+        //                return false;
+        //            };
+        //            if col.typedef != colv.into() {
+        //                return false;
+        //            }
+        //        }
+        //        true
+        //    })
+        //    .unwrap_or(true);
+        //if !ok {
+        //    panic!("Mistaken types\ndef: {def:?}\nrows: {rows:?}")
+        //}
+        TableVal { def, rows: row }
     }
 }
+
