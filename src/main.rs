@@ -19,6 +19,6 @@ fn main() {
     let content = std::fs::read_to_string("acc.tbl").unwrap();
     let tokens = token::tokenize(&content);
     let tables = parse::parse(tokens);
-    let tables = prepare::prepare(tables);
+    println!("{tables:?}");
 }
 
